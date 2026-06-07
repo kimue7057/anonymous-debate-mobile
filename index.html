@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="운영자가 제시한 하나의 논쟁에 익명으로 찬반 댓글을 남기는 모바일 웹 페이지"
+    />
+    <title>무명토론</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="phone-shell">
+      <header class="app-header">
+        <h1>무명토론</h1>
+      </header>
+
+      <section class="intro-section" aria-label="인트로">
+        <p class="intro-title">우리의 의견은 어디로 향하고 있을까?</p>
+        <p class="intro-copy">하나의 질문에 익명으로 생각을 남겨보세요.</p>
+      </section>
+
+      <section class="debate-card" aria-labelledby="debateTitle">
+        <p class="section-label">이번 논쟁</p>
+        <h2 id="debateTitle">AI 면접을 공공 채용에 확대해도 될까?</h2>
+        <p class="debate-copy">
+          채용의 공정성과 알고리즘 차별 우려가 맞서고 있습니다.
+        </p>
+
+        <div class="ratio-block" aria-label="찬반 비율">
+          <div class="meter">
+            <span class="support-fill" id="supportFill"></span>
+            <span class="oppose-fill" id="opposeFill"></span>
+          </div>
+          <p id="ratioText">찬성 54% / 반대 46%</p>
+        </div>
+
+        <p class="engagement-line" id="engagementLine">
+          3,482명 참여 · 1,245개 댓글
+        </p>
+      </section>
+
+      <section class="stance-section" aria-labelledby="stanceHeading">
+        <h2 id="stanceHeading">입장 선택</h2>
+        <div class="stance-grid" role="group" aria-label="입장 선택">
+          <button class="stance-button support" type="button" data-stance="support">
+            찬성
+          </button>
+          <button class="stance-button oppose" type="button" data-stance="oppose">
+            반대
+          </button>
+        </div>
+      </section>
+
+      <section class="comment-composer" aria-labelledby="composerHeading">
+        <h2 id="composerHeading">익명으로 의견 남기기</h2>
+        <p class="stance-notice" id="stanceNotice">
+          입장을 선택하면 댓글 입력창에 표시됩니다.
+        </p>
+        <textarea
+          id="commentInput"
+          maxlength="300"
+          rows="4"
+          placeholder="내 생각을 짧게 남겨주세요. 서로 다른 생각을 존중하며 작성해주세요."
+        ></textarea>
+        <div class="composer-footer">
+          <span id="charCount">0 / 300</span>
+          <button class="primary-button" id="submitComment" type="button">
+            등록
+          </button>
+        </div>
+      </section>
+
+      <section class="ai-summary-section" aria-labelledby="summaryHeading">
+        <div class="section-row summary-heading">
+          <div>
+            <h2 id="summaryHeading">사람들은 이렇게 생각하고 있어요</h2>
+            <p>AI가 익명 댓글의 흐름을 바탕으로 찬성과 반대 의견을 정리했어요.</p>
+          </div>
+        </div>
+
+        <div class="summary-content">
+          <article class="summary-block flow-summary">
+            <span>전체 흐름</span>
+            <p id="summaryFlow"></p>
+          </article>
+
+          <div class="stance-summary-grid">
+            <article class="summary-block support-summary">
+              <span>찬성 쪽은</span>
+              <p id="summarySupport"></p>
+            </article>
+            <article class="summary-block oppose-summary">
+              <span>반대 쪽은</span>
+              <p id="summaryOppose"></p>
+            </article>
+          </div>
+
+          <article class="summary-block issue-summary">
+            <span>가장 갈리는 지점</span>
+            <p id="summaryIssue"></p>
+          </article>
+        </div>
+      </section>
+
+      <section class="comments-section" aria-labelledby="commentsHeading">
+        <div class="section-row">
+          <h2 id="commentsHeading">댓글</h2>
+          <span id="visibleCount">0개</span>
+        </div>
+        <div class="filter-tabs" role="tablist" aria-label="댓글 필터">
+          <button class="filter-tab active" type="button" data-filter="all">
+            전체
+          </button>
+          <button class="filter-tab" type="button" data-filter="support">
+            찬성
+          </button>
+          <button class="filter-tab" type="button" data-filter="oppose">
+            반대
+          </button>
+          <button class="filter-tab" type="button" data-filter="popular">
+            인기순
+          </button>
+        </div>
+        <div class="comment-list" id="commentList"></div>
+      </section>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
