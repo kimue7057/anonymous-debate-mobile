@@ -1,0 +1,551 @@
+:root {
+  --bg: #f5f7f9;
+  --surface: #ffffff;
+  --surface-soft: #eef2f5;
+  --ink: #17212b;
+  --muted: #6b7786;
+  --line: #dce3ea;
+  --support: #0f8a7a;
+  --support-soft: #ddf3ef;
+  --oppose: #d46b41;
+  --oppose-soft: #fae4d8;
+  --shadow: 0 12px 30px rgba(23, 33, 43, 0.07);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family:
+    Inter, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui,
+    sans-serif;
+}
+
+button,
+textarea {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  cursor: pointer;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+.phone-shell {
+  width: min(100%, 520px);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 18px 16px 32px;
+}
+
+.app-header {
+  padding: 6px 0 18px;
+}
+
+.app-header h1 {
+  font-size: 1.03rem;
+  font-weight: 850;
+  letter-spacing: 0;
+}
+
+.intro-section {
+  padding: 4px 0 18px;
+}
+
+.intro-title {
+  font-size: 1.42rem;
+  font-weight: 850;
+  line-height: 1.35;
+}
+
+.intro-copy {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.94rem;
+  line-height: 1.55;
+}
+
+.debate-card,
+.comment-composer,
+.ai-summary-section,
+.comments-section {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.debate-card {
+  padding: 18px;
+}
+
+.section-label {
+  color: var(--support);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.debate-card h2 {
+  margin-top: 8px;
+  font-size: 1.3rem;
+  font-weight: 850;
+  line-height: 1.38;
+}
+
+.debate-copy {
+  margin-top: 10px;
+  color: #4d5b69;
+  font-size: 0.93rem;
+  line-height: 1.58;
+}
+
+.ratio-block {
+  margin-top: 17px;
+}
+
+.meter {
+  display: flex;
+  overflow: hidden;
+  height: 12px;
+  border-radius: 8px;
+  background: var(--surface-soft);
+}
+
+.meter span {
+  height: 100%;
+  transition: width 180ms ease;
+}
+
+.support-fill {
+  background: var(--support);
+}
+
+.oppose-fill {
+  background: var(--oppose);
+}
+
+#ratioText {
+  margin-top: 9px;
+  color: #2d3b48;
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.engagement-line {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 750;
+}
+
+.stance-section {
+  margin-top: 18px;
+}
+
+.stance-section h2,
+.comment-composer h2,
+.section-row h2 {
+  font-size: 1rem;
+  font-weight: 850;
+}
+
+.stance-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.stance-button {
+  min-height: 54px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 850;
+}
+
+.stance-button.support {
+  background: var(--support-soft);
+}
+
+.stance-button.oppose {
+  background: var(--oppose-soft);
+}
+
+.stance-button.active.support {
+  border-color: var(--support);
+  color: #075f5a;
+  box-shadow: inset 0 0 0 1px var(--support);
+}
+
+.stance-button.active.oppose {
+  border-color: var(--oppose);
+  color: #8f371a;
+  box-shadow: inset 0 0 0 1px var(--oppose);
+}
+
+.comment-composer {
+  margin-top: 14px;
+  padding: 16px;
+}
+
+.stance-notice {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.stance-notice.support {
+  color: #075f5a;
+}
+
+.stance-notice.oppose {
+  color: #8f371a;
+}
+
+.comment-composer textarea {
+  width: 100%;
+  min-height: 118px;
+  margin-top: 12px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 13px;
+  background: #fbfcfd;
+  color: var(--ink);
+  line-height: 1.55;
+  outline: none;
+}
+
+.comment-composer textarea:focus {
+  border-color: #aebbc8;
+  box-shadow: 0 0 0 4px rgba(15, 138, 122, 0.08);
+}
+
+.composer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+#charCount,
+#visibleCount {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 750;
+}
+
+.primary-button {
+  min-width: 86px;
+  min-height: 42px;
+  border-radius: 8px;
+  background: #17212b;
+  color: white;
+  font-weight: 850;
+}
+
+.ai-summary-section {
+  margin-top: 16px;
+  padding: 16px;
+}
+
+.summary-heading {
+  align-items: flex-start;
+}
+
+.summary-heading p {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.summary-content {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.summary-block {
+  border: 1px solid #e2e8ee;
+  border-radius: 8px;
+  padding: 13px;
+  background: #fbfcfd;
+}
+
+.summary-block span {
+  display: block;
+  margin-bottom: 6px;
+  color: #40505f;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.summary-block p {
+  color: #243241;
+  font-size: 0.9rem;
+  line-height: 1.62;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.stance-summary-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.support-summary {
+  border-color: rgba(15, 138, 122, 0.24);
+  background: #f4fbf9;
+}
+
+.support-summary span {
+  color: #075f5a;
+}
+
+.oppose-summary {
+  border-color: rgba(212, 107, 65, 0.25);
+  background: #fff8f4;
+}
+
+.oppose-summary span {
+  color: #8f371a;
+}
+
+.issue-summary {
+  background: #f3f6f8;
+}
+
+.issue-summary p {
+  font-weight: 850;
+}
+
+.comments-section {
+  margin-top: 16px;
+  padding: 16px;
+}
+
+.section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.filter-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+  margin-top: 13px;
+}
+
+.filter-tab {
+  min-height: 38px;
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: #425160;
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.filter-tab.active {
+  background: #17212b;
+  color: white;
+}
+
+.comment-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.comment-card {
+  border-top: 1px solid var(--line);
+  padding-top: 13px;
+}
+
+.comment-card:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.comment-card.flagged {
+  padding: 12px;
+  border: 1px solid rgba(212, 107, 65, 0.34);
+  border-radius: 8px;
+  background: #fff8f4;
+}
+
+.comment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.alias {
+  color: #2c3a47;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.badge.support {
+  background: var(--support-soft);
+  color: #075f5a;
+}
+
+.badge.oppose {
+  background: var(--oppose-soft);
+  color: #8f371a;
+}
+
+.comment-body {
+  margin-top: 8px;
+  color: #243241;
+  font-size: 0.94rem;
+  line-height: 1.65;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+.comment-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.comment-actions button {
+  min-height: 30px;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-weight: inherit;
+}
+
+.comment-actions span {
+  color: #a5b0bc;
+}
+
+.reply-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+  padding-left: 10px;
+  border-left: 3px solid #d5dde6;
+}
+
+.reply {
+  color: #3c4b59;
+}
+
+.reply strong {
+  font-size: 0.76rem;
+}
+
+.reply p {
+  margin-top: 3px;
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.reply-box {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.reply-box textarea {
+  min-height: 70px;
+  resize: vertical;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #fbfcfd;
+  outline: none;
+  line-height: 1.5;
+}
+
+.reply-box button {
+  justify-self: end;
+}
+
+.empty-state {
+  border: 1px dashed #c7d0da;
+  border-radius: 8px;
+  padding: 18px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.5;
+}
+
+.toast {
+  position: fixed;
+  right: 16px;
+  bottom: 18px;
+  left: 16px;
+  z-index: 20;
+  max-width: 488px;
+  margin: 0 auto;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: rgba(23, 33, 43, 0.94);
+  color: white;
+  font-size: 0.88rem;
+  font-weight: 800;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (min-width: 760px) {
+  body {
+    padding: 26px 0;
+  }
+
+  .phone-shell {
+    min-height: calc(100vh - 52px);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #f8fafb;
+    box-shadow: 0 20px 54px rgba(23, 33, 43, 0.09);
+  }
+}
