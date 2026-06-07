@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>무명토론 관리자</title>
+    <link rel="stylesheet" href="./admin.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./admin.js" defer></script>
+  </head>
+  <body>
+    <header class="admin-header">
+      <div>
+        <p class="eyebrow">Anonymous Debate Admin</p>
+        <h1>무명토론 관리자</h1>
+      </div>
+      <button class="ghost-button hidden" id="logoutButton" type="button">로그아웃</button>
+    </header>
+
+    <main class="admin-shell">
+      <section class="panel" id="configPanel">
+        <div class="panel-heading">
+          <div>
+            <h2>Supabase 설정</h2>
+            <p>GitHub Pages에서는 환경변수를 직접 읽을 수 없어 URL과 anon key를 브라우저에 저장해 사용합니다.</p>
+          </div>
+        </div>
+        <form class="form-grid" id="configForm">
+          <label>
+            Supabase URL
+            <input id="configUrl" name="url" type="url" placeholder="https://your-project-ref.supabase.co" autocomplete="off" />
+          </label>
+          <label>
+            Supabase anon key
+            <input id="configAnonKey" name="anonKey" type="password" placeholder="public anon key" autocomplete="off" />
+          </label>
+          <div class="form-actions">
+            <button class="primary-button" type="submit">설정 저장</button>
+            <button class="ghost-button" id="clearConfigButton" type="button">설정 지우기</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel" id="loginPanel">
+        <div class="panel-heading">
+          <div>
+            <h2>관리자 로그인</h2>
+            <p>Supabase Auth 이메일과 비밀번호로 로그인합니다.</p>
+          </div>
+        </div>
+        <form class="form-grid narrow" id="loginForm">
+          <label>
+            이메일
+            <input id="email" name="email" type="email" autocomplete="email" required />
+          </label>
+          <label>
+            비밀번호
+            <input id="password" name="password" type="password" autocomplete="current-password" required />
+          </label>
+          <button class="primary-button" type="submit">로그인</button>
+        </form>
+        <p class="message" id="authMessage"></p>
+      </section>
+
+      <section class="panel danger hidden" id="blockedPanel">
+        <h2>접근할 수 없습니다</h2>
+        <p>로그인한 계정이 `admin_users` 테이블에 등록되어 있지 않습니다.</p>
+      </section>
+
+      <div class="workspace hidden" id="adminWorkspace">
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>논쟁 관리</h2>
+              <p>논쟁을 등록하고, 하나의 논쟁만 active 상태로 설정합니다.</p>
+            </div>
+            <button class="ghost-button" id="newDebateButton" type="button">새 논쟁</button>
+          </div>
+
+          <div class="split-layout">
+            <form class="form-grid" id="debateForm">
+              <input id="debateId" type="hidden" />
+              <label>
+                제목
+                <input id="debateTitle" type="text" maxlength="120" required />
+              </label>
+              <label>
+                설명
+                <textarea id="debateDescription" rows="4" maxlength="500"></textarea>
+              </label>
+              <div class="two-column">
+                <label>
+                  상태
+                  <select id="debateStatus">
+                    <option value="draft">draft</option>
+                    <option value="active">active</option>
+                    <option value="archived">archived</option>
+                  </select>
+                </label>
+                <label>
+                  시작일
+                  <input id="debateStartAt" type="datetime-local" />
+                </label>
+              </div>
+              <label>
+                종료일
+                <input id="debateEndAt" type="datetime-local" />
+              </label>
+              <div class="form-actions">
+                <button class="primary-button" type="submit">저장</button>
+                <button class="secondary-button" id="setActiveButton" type="button">active 설정</button>
+              </div>
+            </form>
+
+            <div>
+              <h3>논쟁 목록</h3>
+              <div class="list" id="debateList"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>AI 요약 관리</h2>
+              <p id="selectedDebateLabel">논쟁을 선택하면 최신 요약을 수정할 수 있습니다.</p>
+            </div>
+          </div>
+          <form class="form-grid" id="summaryForm">
+            <label>
+              전체 흐름 요약
+              <textarea id="overallSummary" rows="3"></textarea>
+            </label>
+            <label>
+              찬성 여론 요약
+              <textarea id="proSummary" rows="3"></textarea>
+            </label>
+            <label>
+              반대 여론 요약
+              <textarea id="conSummary" rows="3"></textarea>
+            </label>
+            <label>
+              가장 갈리는 쟁점
+              <input id="keyIssue" type="text" maxlength="180" />
+            </label>
+            <button class="primary-button" type="submit">AI 요약 저장</button>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>댓글 관리</h2>
+              <p>선택한 논쟁의 댓글을 숨김 처리하거나 해제합니다.</p>
+            </div>
+          </div>
+          <div class="list comments-list" id="commentList"></div>
+        </section>
+      </div>
+    </main>
+
+    <div class="toast hidden" id="toast"></div>
+  </body>
+</html>
