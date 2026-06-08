@@ -43,6 +43,10 @@ button {
   display: none !important;
 }
 
+.embedded-config #configPanel {
+  display: none !important;
+}
+
 .admin-header {
   display: flex;
   align-items: center;
