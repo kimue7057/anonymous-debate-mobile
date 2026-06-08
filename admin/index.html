@@ -6,9 +6,15 @@
     <title>무명토론 관리자</title>
     <link rel="stylesheet" href="./admin.css" />
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      window.SUPABASE_CONFIG = {
+        url: "https://neeimhgjuqrmppfyzvus.supabase.co",
+        anonKey: "sb_publishable_BpfBYADHKY4cEfFoOoztDA_V7rgTcGx",
+      };
+    </script>
     <script src="./admin.js" defer></script>
   </head>
-  <body>
+  <body class="embedded-config">
     <header class="admin-header">
       <div>
         <p class="eyebrow">Anonymous Debate Admin</p>
