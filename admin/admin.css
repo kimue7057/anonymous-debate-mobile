@@ -140,6 +140,28 @@ label {
   font-weight: 700;
 }
 
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox-row input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.status-preview {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: #334047;
+  font-size: 14px;
+  font-weight: 700;
+}
+
 input,
 select,
 textarea {
@@ -277,12 +299,15 @@ textarea:focus {
   color: #087568;
 }
 
-.badge.draft {
+.badge.draft,
+.badge.scheduled {
   background: #eef2f3;
   color: #536169;
 }
 
 .badge.archived,
+.badge.paused,
+.badge.expired,
 .badge.con,
 .badge.is-hidden {
   background: var(--orange-soft);
