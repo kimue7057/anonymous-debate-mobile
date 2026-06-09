@@ -1,5 +1,5 @@
-const ADMIN_SUPABASE_URL = "";
-const ADMIN_SUPABASE_ANON_KEY = "";
+const ADMIN_SUPABASE_URL = "https://neeimhgjuqrmppfyzvus.supabase.co";
+const ADMIN_SUPABASE_ANON_KEY = "sb_publishable_BpfBYADHKY4cEfFoOoztDA_V7rgTcGx";
 
 const CONFIG_KEYS = {
   url: "SUPABASE_URL",
@@ -31,12 +31,13 @@ const elements = {
   configUrl: $("#configUrl"),
   conSummary: $("#conSummary"),
   debateDescription: $("#debateDescription"),
+  debateComputedStatus: $("#debateComputedStatus"),
   debateEndAt: $("#debateEndAt"),
   debateForm: $("#debateForm"),
   debateId: $("#debateId"),
   debateList: $("#debateList"),
+  debatePaused: $("#debatePaused"),
   debateStartAt: $("#debateStartAt"),
-  debateStatus: $("#debateStatus"),
   debateTitle: $("#debateTitle"),
   email: $("#email"),
   keyIssue: $("#keyIssue"),
@@ -45,10 +46,10 @@ const elements = {
   logoutButton: $("#logoutButton"),
   newDebateButton: $("#newDebateButton"),
   overallSummary: $("#overallSummary"),
+  pauseToggleButton: $("#pauseToggleButton"),
   password: $("#password"),
   proSummary: $("#proSummary"),
   selectedDebateLabel: $("#selectedDebateLabel"),
-  setActiveButton: $("#setActiveButton"),
   summaryForm: $("#summaryForm"),
   toast: $("#toast"),
   workspace: $("#adminWorkspace"),
@@ -59,6 +60,7 @@ document.addEventListener("DOMContentLoaded", init);
 async function init() {
   bindEvents();
   fillConfigForm();
+  renderDebateComputedStatus();
 
   if (!setupSupabaseClient()) {
     renderSignedOut("Supabase URL과 anon key를 먼저 설정해주세요.");
@@ -85,11 +87,10 @@ function bindEvents() {
   elements.logoutButton.addEventListener("click", handleLogout);
   elements.newDebateButton.addEventListener("click", clearDebateForm);
   elements.debateForm.addEventListener("submit", handleDebateSave);
-  elements.setActiveButton.addEventListener("click", () => {
-    if (state.selectedDebateId) {
-      setActiveDebate(state.selectedDebateId);
-    }
-  });
+  elements.pauseToggleButton.addEventListener("click", handlePauseToggle);
+  elements.debatePaused.addEventListener("change", renderDebateComputedStatus);
+  elements.debateStartAt.addEventListener("input", renderDebateComputedStatus);
+  elements.debateEndAt.addEventListener("input", renderDebateComputedStatus);
   elements.summaryForm.addEventListener("submit", handleSummarySave);
   elements.debateList.addEventListener("click", handleDebateListClick);
   elements.commentList.addEventListener("click", handleCommentListClick);
@@ -110,6 +111,10 @@ function getConfig() {
       window.localStorage?.getItem(CONFIG_KEYS.anonKey) ||
       "",
   };
+}
+
+function hasEmbeddedConfig() {
+  return Boolean(ADMIN_SUPABASE_URL && ADMIN_SUPABASE_ANON_KEY);
 }
 
 function setupSupabaseClient() {
@@ -133,6 +138,95 @@ function fillConfigForm() {
   const { url, anonKey } = getConfig();
   elements.configUrl.value = url;
   elements.configAnonKey.value = anonKey;
+}
+
+function parseDateValue(value) {
+  return value ? new Date(value) : null;
+}
+
+function isPausedDebate(debate) {
+  return ["draft", "archived", "paused"].includes(debate?.status ?? "");
+}
+
+function getStoredDebateStatus(paused) {
+  // Keep the current DB schema working without a migration:
+  // treat archived as the persisted paused flag.
+  return paused ? "archived" : "active";
+}
+
+function getDebateStatus(debate, now = new Date()) {
+  if (!debate) return "scheduled";
+
+  if (isPausedDebate(debate)) {
+    return "paused";
+  }
+
+  const startAt = parseDateValue(debate.start_at);
+  const endAt = parseDateValue(debate.end_at);
+
+  if (!startAt || !endAt) {
+    return "scheduled";
+  }
+
+  if (now < startAt) {
+    return "scheduled";
+  }
+
+  if (now >= endAt) {
+    return "expired";
+  }
+
+  return "active";
+}
+
+function isActiveDebate(debate, now = new Date()) {
+  return getDebateStatus(debate, now) === "active";
+}
+
+function getDisplayStatusLabel(status) {
+  if (status === "active") return "Active";
+  if (status === "paused") return "Paused";
+  if (status === "expired") return "Expired";
+  return "Scheduled";
+}
+
+function hasOverlappingActivePeriod(nextDebate, existingDebates, now = new Date()) {
+  const nextStart = parseDateValue(nextDebate.start_at);
+  const nextEnd = parseDateValue(nextDebate.end_at);
+
+  if (!nextStart || !nextEnd || isPausedDebate(nextDebate) || nextEnd <= now) {
+    return false;
+  }
+
+  return existingDebates.some((existingDebate) => {
+    if (existingDebate.id === nextDebate.id) return false;
+    if (isPausedDebate(existingDebate)) return false;
+    if (getDebateStatus(existingDebate, now) === "expired") return false;
+
+    const existingStart = parseDateValue(existingDebate.start_at);
+    const existingEnd = parseDateValue(existingDebate.end_at);
+
+    if (!existingStart || !existingEnd) return false;
+    if (existingEnd <= now) return false;
+
+    return existingStart < nextEnd && nextStart < existingEnd;
+  });
+}
+
+function getFormDebateSnapshot() {
+  return {
+    id: elements.debateId.value || null,
+    status: getStoredDebateStatus(elements.debatePaused.checked),
+    start_at: toIsoOrNull(elements.debateStartAt.value),
+    end_at: toIsoOrNull(elements.debateEndAt.value),
+  };
+}
+
+function renderDebateComputedStatus() {
+  const computedStatus = getDebateStatus(getFormDebateSnapshot());
+  elements.debateComputedStatus.className = `badge ${computedStatus}`;
+  elements.debateComputedStatus.textContent = getDisplayStatusLabel(computedStatus);
+  elements.pauseToggleButton.textContent = elements.debatePaused.checked ? "재개" : "일시중지";
 }
 
 async function handleConfigSave(event) {
@@ -245,7 +339,7 @@ async function fetchAdminUser(userId) {
 function renderSignedOut(message) {
   state.admin = null;
   elements.loginPanel.classList.remove("hidden");
-  elements.configPanel.classList.remove("hidden");
+  elements.configPanel.classList.toggle("hidden", hasEmbeddedConfig());
   elements.workspace.classList.add("hidden");
   elements.logoutButton.classList.add("hidden");
   elements.blockedPanel.classList.add("hidden");
@@ -257,7 +351,7 @@ function renderBlocked() {
   elements.workspace.classList.add("hidden");
   elements.logoutButton.classList.remove("hidden");
   elements.blockedPanel.classList.remove("hidden");
-  elements.configPanel.classList.remove("hidden");
+  elements.configPanel.classList.toggle("hidden", hasEmbeddedConfig());
   setAuthMessage("");
 }
 
@@ -294,10 +388,12 @@ async function loadDebates() {
   const selectedStillExists = state.debates.some(
     (debate) => debate.id === state.selectedDebateId,
   );
+  const now = new Date();
   const nextDebate =
     (selectedStillExists &&
       state.debates.find((debate) => debate.id === state.selectedDebateId)) ||
-    state.debates.find((debate) => debate.status === "active") ||
+    state.debates.find((debate) => isActiveDebate(debate, now)) ||
+    state.debates.find((debate) => getDebateStatus(debate, now) === "scheduled") ||
     state.debates[0];
 
   await selectDebate(nextDebate.id);
@@ -314,19 +410,23 @@ function renderDebateList() {
     .map((debate) => {
       const selectedClass =
         debate.id === state.selectedDebateId ? " selected" : "";
+      const computedStatus = getDebateStatus(debate);
+      const statusLabel = getDisplayStatusLabel(computedStatus);
+      const toggleLabel = isPausedDebate(debate) ? "재개" : "일시중지";
+
       return `
         <article class="list-item${selectedClass}">
           <div class="item-header">
             <div>
               <p class="item-title">${escapeHtml(debate.title)}</p>
               <div class="item-meta">
-                <span class="badge ${escapeHtml(debate.status)}">${escapeHtml(debate.status)}</span>
+                <span class="badge ${computedStatus}">${statusLabel}</span>
                 <span>${formatPeriod(debate.start_at, debate.end_at)}</span>
               </div>
             </div>
             <div class="item-actions">
               <button class="small-button" type="button" data-action="select-debate" data-id="${debate.id}">선택</button>
-              <button class="small-button" type="button" data-action="activate-debate" data-id="${debate.id}">active 설정</button>
+              <button class="small-button" type="button" data-action="toggle-pause" data-id="${debate.id}">${toggleLabel}</button>
             </div>
           </div>
         </article>
@@ -344,8 +444,10 @@ async function handleDebateListClick(event) {
     await selectDebate(id);
   }
 
-  if (button.dataset.action === "activate-debate") {
-    await setActiveDebate(id);
+  if (button.dataset.action === "toggle-pause") {
+    const debate = state.debates.find((item) => item.id === id);
+    if (!debate) return;
+    await updateDebatePauseState(id, !isPausedDebate(debate));
   }
 }
 
@@ -363,10 +465,11 @@ function fillDebateForm(debate) {
   elements.debateId.value = debate.id;
   elements.debateTitle.value = debate.title ?? "";
   elements.debateDescription.value = debate.description ?? "";
-  elements.debateStatus.value = debate.status ?? "draft";
+  elements.debatePaused.checked = isPausedDebate(debate);
   elements.debateStartAt.value = toDateTimeLocal(debate.start_at);
   elements.debateEndAt.value = toDateTimeLocal(debate.end_at);
   elements.selectedDebateLabel.textContent = `${debate.title} 요약을 수정 중입니다.`;
+  renderDebateComputedStatus();
 }
 
 function clearDebateForm() {
@@ -374,13 +477,14 @@ function clearDebateForm() {
   elements.debateId.value = "";
   elements.debateTitle.value = "";
   elements.debateDescription.value = "";
-  elements.debateStatus.value = "draft";
+  elements.debatePaused.checked = false;
   elements.debateStartAt.value = "";
   elements.debateEndAt.value = "";
   elements.selectedDebateLabel.textContent =
     "논쟁을 선택하면 최신 요약을 수정할 수 있습니다.";
   clearSummaryForm();
   state.comments = [];
+  renderDebateComputedStatus();
   renderDebateList();
   renderComments();
 }
@@ -390,21 +494,42 @@ async function handleDebateSave(event) {
 
   const id = elements.debateId.value;
   const title = elements.debateTitle.value.trim();
-  const status = elements.debateStatus.value;
+  const startAt = toIsoOrNull(elements.debateStartAt.value);
+  const endAt = toIsoOrNull(elements.debateEndAt.value);
+  const paused = elements.debatePaused.checked;
 
   if (!title) {
     showToast("논쟁 제목을 입력해주세요.");
     return;
   }
 
-  const shouldActivate = status === "active";
+  if (!startAt || !endAt) {
+    showToast("시작일과 종료일을 모두 입력해주세요.");
+    return;
+  }
+
+  if (new Date(endAt) <= new Date(startAt)) {
+    showToast("종료일은 시작일보다 늦어야 합니다.");
+    return;
+  }
+
   const payload = {
     title,
     description: nullableText(elements.debateDescription.value),
-    status: shouldActivate ? "draft" : status,
-    start_at: toIsoOrNull(elements.debateStartAt.value),
-    end_at: toIsoOrNull(elements.debateEndAt.value),
+    status: getStoredDebateStatus(paused),
+    start_at: startAt,
+    end_at: endAt,
   };
+
+  const nextDebate = {
+    id: id || null,
+    ...payload,
+  };
+
+  if (hasOverlappingActivePeriod(nextDebate, state.debates)) {
+    showToast("해당 기간에 이미 진행 예정인 논쟁이 있습니다.");
+    return;
+  }
 
   let savedDebate;
 
@@ -435,43 +560,47 @@ async function handleDebateSave(event) {
     savedDebate = data;
   }
 
-  if (shouldActivate) {
-    await setActiveDebate(savedDebate.id, false);
-  }
-
   state.selectedDebateId = savedDebate.id;
   showToast("논쟁을 저장했습니다.");
   await loadDebates();
 }
 
-async function setActiveDebate(debateId, reload = true) {
-  const { error: archiveError } = await supabaseClient
-    .from("debates")
-    .update({ status: "archived" })
-    .eq("status", "active")
-    .neq("id", debateId);
-
-  if (archiveError) {
-    showToast(`기존 active 논쟁 변경 실패: ${archiveError.message}`);
+async function handlePauseToggle() {
+  if (!state.selectedDebateId) {
+    showToast("논쟁을 먼저 선택해주세요.");
     return;
   }
 
-  const { error: activeError } = await supabaseClient
+  await updateDebatePauseState(state.selectedDebateId, !elements.debatePaused.checked);
+}
+
+async function updateDebatePauseState(debateId, paused) {
+  const targetDebate = state.debates.find((debate) => debate.id === debateId);
+  if (!targetDebate) return;
+
+  const nextDebate = {
+    ...targetDebate,
+    status: getStoredDebateStatus(paused),
+  };
+
+  if (!paused && hasOverlappingActivePeriod(nextDebate, state.debates)) {
+    showToast("해당 기간에 이미 진행 예정인 논쟁이 있습니다.");
+    return;
+  }
+
+  const { error } = await supabaseClient
     .from("debates")
-    .update({ status: "active" })
+    .update({ status: getStoredDebateStatus(paused) })
     .eq("id", debateId);
 
-  if (activeError) {
-    showToast(`active 설정 실패: ${activeError.message}`);
+  if (error) {
+    showToast(`논쟁 상태 변경 실패: ${error.message}`);
     return;
   }
 
   state.selectedDebateId = debateId;
-  showToast("active 논쟁으로 설정했습니다.");
-
-  if (reload) {
-    await loadDebates();
-  }
+  showToast(paused ? "논쟁을 일시중지했습니다." : "논쟁을 재개했습니다.");
+  await loadDebates();
 }
 
 async function loadComments(debateId) {
