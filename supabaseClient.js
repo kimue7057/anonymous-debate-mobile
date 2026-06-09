@@ -61,8 +61,9 @@ async function request(path, options = {}) {
 }
 
 export async function getActiveDebate() {
+  const now = encodeURIComponent(new Date().toISOString());
   const rows = await request(
-    "debates?select=*&status=eq.active&order=start_at.desc.nullslast&limit=1",
+    `debates?select=*&status=not.in.(archived,draft,paused)&start_at=lte.${now}&end_at=gt.${now}&order=start_at.asc&limit=1`,
   );
   return rows[0] ?? null;
 }
