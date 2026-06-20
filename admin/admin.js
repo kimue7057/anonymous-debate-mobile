@@ -12,7 +12,6 @@ const state = {
   debates: [],
   selectedDebateId: null,
   session: null,
-  summary: null,
 };
 
 let supabaseClient = null;
@@ -29,7 +28,6 @@ const elements = {
   configForm: $("#configForm"),
   configPanel: $("#configPanel"),
   configUrl: $("#configUrl"),
-  conSummary: $("#conSummary"),
   debateDescription: $("#debateDescription"),
   debateComputedStatus: $("#debateComputedStatus"),
   debateEndAt: $("#debateEndAt"),
@@ -40,17 +38,12 @@ const elements = {
   debateStartAt: $("#debateStartAt"),
   debateTitle: $("#debateTitle"),
   email: $("#email"),
-  keyIssue: $("#keyIssue"),
   loginForm: $("#loginForm"),
   loginPanel: $("#loginPanel"),
   logoutButton: $("#logoutButton"),
   newDebateButton: $("#newDebateButton"),
-  overallSummary: $("#overallSummary"),
   pauseToggleButton: $("#pauseToggleButton"),
   password: $("#password"),
-  proSummary: $("#proSummary"),
-  selectedDebateLabel: $("#selectedDebateLabel"),
-  summaryForm: $("#summaryForm"),
   toast: $("#toast"),
   workspace: $("#adminWorkspace"),
 };
@@ -91,7 +84,6 @@ function bindEvents() {
   elements.debatePaused.addEventListener("change", renderDebateComputedStatus);
   elements.debateStartAt.addEventListener("input", renderDebateComputedStatus);
   elements.debateEndAt.addEventListener("input", renderDebateComputedStatus);
-  elements.summaryForm.addEventListener("submit", handleSummarySave);
   elements.debateList.addEventListener("click", handleDebateListClick);
   elements.commentList.addEventListener("click", handleCommentListClick);
 }
@@ -261,7 +253,6 @@ async function handleConfigClear() {
   state.admin = null;
   state.debates = [];
   state.comments = [];
-  state.summary = null;
   state.selectedDebateId = null;
   supabaseClient = null;
   renderSignedOut("Supabase 설정을 지웠습니다.");
@@ -380,7 +371,6 @@ async function loadDebates() {
 
   if (state.debates.length === 0) {
     clearDebateForm();
-    clearSummaryForm();
     renderComments();
     return;
   }
@@ -458,7 +448,7 @@ async function selectDebate(id) {
   state.selectedDebateId = id;
   fillDebateForm(debate);
   renderDebateList();
-  await Promise.all([loadSummary(id), loadComments(id)]);
+  await loadComments(id);
 }
 
 function fillDebateForm(debate) {
@@ -468,7 +458,6 @@ function fillDebateForm(debate) {
   elements.debatePaused.checked = isPausedDebate(debate);
   elements.debateStartAt.value = toDateTimeLocal(debate.start_at);
   elements.debateEndAt.value = toDateTimeLocal(debate.end_at);
-  elements.selectedDebateLabel.textContent = `${debate.title} 요약을 수정 중입니다.`;
   renderDebateComputedStatus();
 }
 
@@ -480,9 +469,6 @@ function clearDebateForm() {
   elements.debatePaused.checked = false;
   elements.debateStartAt.value = "";
   elements.debateEndAt.value = "";
-  elements.selectedDebateLabel.textContent =
-    "논쟁을 선택하면 최신 요약을 수정할 수 있습니다.";
-  clearSummaryForm();
   state.comments = [];
   renderDebateComputedStatus();
   renderDebateList();
@@ -686,81 +672,6 @@ async function handleCommentListClick(event) {
 
   showToast(isHidden ? "댓글을 숨김 처리했습니다." : "댓글 숨김을 해제했습니다.");
   await loadComments(state.selectedDebateId);
-}
-
-async function loadSummary(debateId) {
-  const { data, error } = await supabaseClient
-    .from("ai_summaries")
-    .select("id,debate_id,overall_summary,pro_summary,con_summary,key_issue,generated_at")
-    .eq("debate_id", debateId)
-    .order("generated_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) {
-    showToast(`AI 요약을 불러오지 못했습니다: ${error.message}`);
-    return;
-  }
-
-  state.summary = data;
-  fillSummaryForm(data);
-}
-
-function fillSummaryForm(summary) {
-  elements.overallSummary.value = summary?.overall_summary ?? "";
-  elements.proSummary.value = summary?.pro_summary ?? "";
-  elements.conSummary.value = summary?.con_summary ?? "";
-  elements.keyIssue.value = summary?.key_issue ?? "";
-}
-
-function clearSummaryForm() {
-  state.summary = null;
-  fillSummaryForm(null);
-}
-
-async function handleSummarySave(event) {
-  event.preventDefault();
-
-  if (!state.selectedDebateId) {
-    showToast("논쟁을 먼저 선택해주세요.");
-    return;
-  }
-
-  const payload = {
-    debate_id: state.selectedDebateId,
-    overall_summary: nullableText(elements.overallSummary.value),
-    pro_summary: nullableText(elements.proSummary.value),
-    con_summary: nullableText(elements.conSummary.value),
-    key_issue: nullableText(elements.keyIssue.value),
-  };
-
-  if (state.summary?.id) {
-    const { error } = await supabaseClient
-      .from("ai_summaries")
-      .update(payload)
-      .eq("id", state.summary.id);
-
-    if (error) {
-      showToast(`AI 요약 수정 실패: ${error.message}`);
-      return;
-    }
-  } else {
-    const { data, error } = await supabaseClient
-      .from("ai_summaries")
-      .insert(payload)
-      .select("id,debate_id,overall_summary,pro_summary,con_summary,key_issue,generated_at")
-      .single();
-
-    if (error) {
-      showToast(`AI 요약 저장 실패: ${error.message}`);
-      return;
-    }
-
-    state.summary = data;
-  }
-
-  showToast("AI 요약을 저장했습니다.");
-  await loadSummary(state.selectedDebateId);
 }
 
 function setAuthMessage(message) {

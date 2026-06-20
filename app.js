@@ -2,18 +2,10 @@ import {
   createComment,
   getActiveDebate,
   getComments,
-  getLatestSummary,
   getSupabaseConfig,
 } from "./supabaseClient.js";
 
 const ALIAS_KEY = "anonymous-debate-alias-v1";
-
-const EMPTY_SUMMARY = {
-  overall_summary: "아직 AI 요약이 없습니다.",
-  pro_summary: "찬성 의견 요약이 아직 없습니다.",
-  con_summary: "반대 의견 요약이 아직 없습니다.",
-  key_issue: "가장 갈리는 쟁점이 아직 없습니다.",
-};
 
 let state = {
   alias: loadAlias(),
@@ -22,7 +14,6 @@ let state = {
   errorMessage: "",
   filter: "all",
   isLoading: true,
-  summary: null,
 };
 let selectedSide = null;
 let activeReplyId = null;
@@ -38,10 +29,6 @@ const els = {
   commentInput: document.querySelector("#commentInput"),
   charCount: document.querySelector("#charCount"),
   submitComment: document.querySelector("#submitComment"),
-  summaryFlow: document.querySelector("#summaryFlow"),
-  summarySupport: document.querySelector("#summarySupport"),
-  summaryOppose: document.querySelector("#summaryOppose"),
-  summaryIssue: document.querySelector("#summaryIssue"),
   visibleCount: document.querySelector("#visibleCount"),
   commentList: document.querySelector("#commentList"),
   toast: document.querySelector("#toast"),
@@ -81,7 +68,6 @@ function setLoadError(message, error = null) {
     debate: null,
     errorMessage: message,
     isLoading: false,
-    summary: null,
   };
 }
 
@@ -110,16 +96,12 @@ async function loadRemoteData() {
         debate: null,
         errorMessage: "현재 활성화된 논쟁이 없습니다.",
         isLoading: false,
-        summary: null,
       };
       render();
       return;
     }
 
-    const [comments, summary] = await Promise.all([
-      getComments(debate.id),
-      getLatestSummary(debate.id),
-    ]);
+    const comments = await getComments(debate.id);
 
     state = {
       ...state,
@@ -127,7 +109,6 @@ async function loadRemoteData() {
       debate,
       errorMessage: "",
       isLoading: false,
-      summary,
     };
     render();
   } catch (error) {
@@ -186,7 +167,6 @@ function render() {
   renderDebate();
   renderTotals();
   renderStance();
-  renderSummary();
   renderFilters();
   renderComments();
 }
@@ -260,30 +240,6 @@ function renderFilters() {
   document.querySelectorAll("[data-filter]").forEach((button) => {
     button.classList.toggle("active", button.dataset.filter === state.filter);
   });
-}
-
-function renderSummary() {
-  if (state.isLoading) {
-    els.summaryFlow.textContent = "요약을 불러오는 중입니다.";
-    els.summarySupport.textContent = "잠시만 기다려주세요.";
-    els.summaryOppose.textContent = "잠시만 기다려주세요.";
-    els.summaryIssue.textContent = "잠시만 기다려주세요.";
-    return;
-  }
-
-  if (!state.debate && state.errorMessage) {
-    els.summaryFlow.textContent = "데이터를 불러오지 못했습니다.";
-    els.summarySupport.textContent = state.errorMessage;
-    els.summaryOppose.textContent = state.errorMessage;
-    els.summaryIssue.textContent = state.errorMessage;
-    return;
-  }
-
-  const summary = state.summary ?? EMPTY_SUMMARY;
-  els.summaryFlow.textContent = summary.overall_summary ?? EMPTY_SUMMARY.overall_summary;
-  els.summarySupport.textContent = summary.pro_summary ?? EMPTY_SUMMARY.pro_summary;
-  els.summaryOppose.textContent = summary.con_summary ?? EMPTY_SUMMARY.con_summary;
-  els.summaryIssue.textContent = summary.key_issue ?? EMPTY_SUMMARY.key_issue;
 }
 
 function renderComments() {
